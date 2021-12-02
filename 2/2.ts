@@ -7,16 +7,19 @@ const sol1 = () => {
   let y = 0;
 
   input.forEach((e:string) => {
-    const [direction, val] = e.split(' ');
+    const eSplit = e.split(' ');
+    const direction = eSplit[0];
+    const val = Number(eSplit[1])
+
     switch(direction) {
       case "forward":
-        x += Number(val);
+        x += val;
         break;
       case "down":
-        y+=Number(val);
+        y+=val;
         break;
       case "up":
-        y-=Number(val);
+        y-=val;
         break
     }
   })
@@ -28,17 +31,19 @@ const sol2=() => {
   let x = 0
   let y = 0;
   input.forEach((e:string) => {
-    const [direction, val] = e.split(' ');
+    const eSplit = e.split(' ');
+    const direction = eSplit[0];
+    const val = Number(eSplit[1])
     switch(direction) {
       case "forward":
-        x += Number(val);
-        y += aim * Number(val);
+        x += val;
+        y += aim * val;
         break;
       case "down":
-        aim += Number(val);
+        aim += val;
         break;
       case "up":
-        aim -= Number(val);
+        aim -= val;
         break;
     }
   })
