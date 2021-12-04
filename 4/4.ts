@@ -17,18 +17,18 @@ const numberRegex = /(\d?\d)/g
 const boards: string[] = [ ...input ]
 const boardSize = 5;
 const generateBoards = (boards: string[]): Board[] => {
-  let localBoards: Board[] = [...new Array(boardSize).fill({points: [], sum: 0})]
+
+  let localBoards: Board[] = [];
+  for(let i = 0; i < boards.length / boardSize; i++ ) { 
+    localBoards.push({points:[], sum:0})
+  }
   boards.forEach((e: string, i:number) => {
+    // @ts-ignore
     let row = e.match(numberRegex).map(e => {return { val: parseInt(e), checked: false }});
-    let boardNum = Math.floor(i/boardSize);
+    let boardNum = Math.floor(i / boardSize);
     localBoards[boardNum].points.push(row) 
-    localBoards[boardNum].sum = row.reduce((prev, cur) => { return prev + cur }, ) 
+    localBoards[boardNum].sum += row.reduce((prev, cur) => { return prev + cur.val}, 0) 
   })
-  // localBoards = boards.map((e:string, i:number) => {
-  //   let localBoard = e.match(numberRegex);
-  //   //@ts-ignore
-  //   return localBoard.map(e => {return {val: parseInt(e), checked: false}})
-  // })
   return localBoards;
 }
 
