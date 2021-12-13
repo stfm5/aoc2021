@@ -20,7 +20,6 @@ const drawMatrix = (locMatrix: string[], maxX: number, maxY: number):void => {
 
 const sol1 = (input: string[][], isPartOne: boolean) => {
   const [matrix, instructions] = input
-  console.log(instructions)
   let locMatrix: string[] = JSON.parse(JSON.stringify(matrix));
   let maxX = Number.MIN_SAFE_INTEGER;
   let maxY = Number.MIN_SAFE_INTEGER;
@@ -37,16 +36,12 @@ const sol1 = (input: string[][], isPartOne: boolean) => {
   for(const i in instructions) {
     let [,c1,c2]= insRegex.exec(instructions[i]) || []
     let val = parseInt(c2);
-    console.log(`maxX: ${maxX}, maxY: ${maxY}, val: ${val}`)
     if(c1 === "y") {
       let folded: string[] = []
       for(const point in locMatrix) {
         let [y, x] = locMatrix[point].split(",").map(e => parseInt(e))
         if(x === val) {
           continue;
-        }
-        if(x === val + 1) {
-          debugger
         }
         if(x > val) {
           x = val-(x-val)
@@ -62,9 +57,6 @@ const sol1 = (input: string[][], isPartOne: boolean) => {
         if(y === val) {
           continue;
         }
-        if(y === val+1) {
-          debugger;
-        }
         if(y > val) {
           y = val-(y-val);
         }
@@ -78,7 +70,6 @@ const sol1 = (input: string[][], isPartOne: boolean) => {
       break;
     }
   }
-  console.log(`maxX: ${maxX}, maxY: ${maxY}, val: ${6}`);
   drawMatrix(locMatrix, maxX, maxY)
   return locMatrix.length
 }
