@@ -99,6 +99,49 @@ const generatePacket = (parent: Packet, transmission: string) => {
   return bitsRead;
 }
 
+const getValue = (packet: Packet): number=> {
+  if(packet.value) {
+    return packet.value
+  } 
+
+  let values: number[] = packet.subpackets.map(p => {
+    return getValue(p) 
+  }) || [-1]
+
+  switch(packet.id) {
+    case 0: 
+      packet.value = values.reduce((prev, cur) => {return prev + cur});
+      break;
+    case 1:
+      packet.value = values.reduce((prev, cur) => {return prev * cur})
+      break;
+    case 2:
+      packet.value = Math.min(...values);
+      break;
+    case 3:
+      packet.value = Math.max(...values);
+      break;
+    case 5:
+      packet.value = values[0] > values[1] ? 1 : 0;
+      break;
+    case 6:
+      packet.value = values[0] < values[1] ? 1 : 0;
+      break;
+    case 7:
+      packet.value = values[0] === values[1] ? 1 : 0;
+      break;
+  }
+  return packet.value as number;
+}
+
+const sumVersion = (packet: Packet, sum: number) => {
+  if(packet.subpackets.length === 0) {
+    return packet.version
+  }
+  let recSum = packet.version
+  packet.subpackets.forEach(p => recSum += sumVersion(p, sum))
+  return sum + recSum
+}
 const sol1 = (input: string) => {
   let transmission: string= input;
   // Kje generirame drvo so paketi, ovoj go kreirame samo kako root
@@ -111,13 +154,26 @@ const sol1 = (input: string) => {
   }
 
   generatePacket(rootPacket, transmission)
-  let sum = sumVersions(rootPacket);
-  // fs.writeFileSync("./test.json",JSON.stringify(rootPacket, null, 2))
-  return 0;
+  let sum = sumVersion(rootPacket, 0);
+  fs.writeFileSync("./test.json",JSON.stringify(rootPacket, null, 2))
+  return sum;
 }
 
 const sol2 = (input: string) => {
+  let transmission: string= input;
+  // Kje generirame drvo so paketi, ovoj go kreirame samo kako root
+  const rootPacket: Packet = {
+    version: 0,
+    id: 0,
+    subpackets: [],
+    lType: "0",
+    l: transmission.length
+  }
 
+  generatePacket(rootPacket, transmission)
+  let value = getValue(rootPacket.subpackets[0]);
+
+  return value
 }
 
 console.log({sol: "1", res: sol1(input)})
