@@ -40,7 +40,9 @@ const runMonad = (instructions: Instruction[], serialNum: number[]) => {
 	let runningNumber: number[] = [...serialNum];
 	// ATM, samo za da vidam sho se deshava u sekoj var
 	instructions.forEach((inst:Instruction) => {
-		switch()
+		switch(inst.type) {
+			case: f
+		}
 	})	
 
 }
