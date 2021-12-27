@@ -18,7 +18,7 @@ type SeaFloor = {
   empty: Hash<boolean>
 }
 
-const parseInput = (input: string[]): SeaFloor => {
+const generateHerds = (input: string[]): SeaFloor => {
   const seaFloor: SeaFloor = {
     herds: {
       east: [],
@@ -83,34 +83,190 @@ const parseInput = (input: string[]): SeaFloor => {
       }
     })
   })
-  // TODO: Vekje gi imash site stada, sega samo treba tie sho se prelevaat od eden na drug kraj da gi spoish
-  let to: number[] = [];
-  let from: number[] = [];
-  seaFloor.herds.south.forEach((herd: Herd, i: number) => {
-    if(herd.from[0] === 0) {
-      from.push(i);
-    } else if(herd.to[0] === H - 1) {
-      to.push(i);
-    }
-  })
-  // Za sekoe stado koe zavrshuva na posledniot red ili pochuva na prviot, gledame dali se od istata kolona
-  // Ako se, gi na toa sho pochnuva od prviot mu stavame from na toa sho zavrshuva od posledniot, i go brisheme drugiot
-  // Ova e za tie sho odat na jug
-  // Za tie sho odat na istok kje bide istoto, samo vo drugata nasoka
-  to.forEach((toI: number, i: number) => {
-    from.forEach((fromI: number, j: number) => {
-      // seaFloor.herds[fromI][1] === seaFloor.herds[toI][1];
-    })
-  })
-    
-  console.log(seaFloor)
-  fs.writeFileSync("./test.json", JSON.stringify(seaFloor));
+  seaFloor.herds.south.push(...southHerds)
+
   return seaFloor
 }
 
+// Dobiva seaFloor, i ako ima stada koisho se prelevaat, gi spojuva vo edno stado
+const joinHerds = (seaFloor: SeaFloor): SeaFloor => {
+  let locSeaFloor = JSON.parse(JSON.stringify(seaFloor));
+
+  let toSouth: number[] = [];
+  let fromSouth: number[] = [];
+
+  let toEast: number[] = [];
+  let fromEast: number[] = [];
+  locSeaFloor.herds.south.forEach((herd: Herd, i: number) => {
+    if(herd.from[0] === 0) {
+      fromSouth.push(i);
+    } else if(herd.to[0] === H - 1) {
+      toSouth.push(i);
+    }
+  })
+
+  locSeaFloor.herds.east.forEach((herd: Herd, i: number) => {
+    if(herd.from[1] === 0) {
+      fromEast.push(i);
+    } else if(herd.to[1] === W - 1){
+      toEast.push(i);
+    }
+  })
+
+  // Za sekoe stado koe zavrshuva na posledniot red ili pochuva na prviot, gledame dali se od istata kolona
+  // Ako se, na toa sho pochnuva od prviot mu stavame from na toa sho zavrshuva od posledniot, i go brisheme drugiot
+  // Ova e za tie sho odat na jug
+  // Za tie sho odat na istok kje bide istoto, samo vo drugata nasoka
+  toSouth.forEach((toI: number, i: number) => {
+    fromSouth.forEach((fromI: number, j: number) => {
+      if(locSeaFloor.herds.south[fromI].from[1] === locSeaFloor.herds.south[toI].to[1]) {
+        locSeaFloor.herds.south[fromI].from = [...locSeaFloor.herds.south[toI].from]
+        locSeaFloor.herds.south.splice(toI, 1);
+        toSouth.splice(i, 1);
+        fromSouth.splice(j, 1);
+      }
+    })
+  })
+
+  toEast.forEach((toI: number, i:number) => {
+    fromEast.forEach((fromI: number, j: number) => {
+      if(locSeaFloor.herds.east[fromI].from[0] === locSeaFloor.herds.east[toI].to[0]) {
+        locSeaFloor.herds.east[fromI].from = [...locSeaFloor.herds.east[toI].from]
+        locSeaFloor.herds.east.splice(toI, 1);
+        toEast.splice(i);
+        fromEast.splice(j);
+      }
+    })
+  })
+
+  return locSeaFloor
+}
+
+const parseInput = (input: string[]): SeaFloor => {
+  return joinHerds(generateHerds(input));
+}
+
+const moveEast = (seaFloor: SeaFloor): [SeaFloor, boolean]=> {
+  const locSeaFloor = JSON.parse(JSON.stringify(seaFloor)) as SeaFloor;
+
+  let newHerds: Herd[] = [];
+  let madeMove = false;
+  locSeaFloor.herds.east.forEach((herd: Herd) => {
+    let possibleNextPosition = herd.to[1] === W - 1 ? 0 : herd.to[1] + 1
+    let herdRow: number = herd.to[0]
+    if(locSeaFloor.empty[`${herd.to[0]},${possibleNextPosition}`]) {
+      madeMove = true;
+      if(herd.from[1] === herd.to[1]) {
+        locSeaFloor.empty[`${herdRow},${possibleNextPosition}`] = false
+        locSeaFloor.empty[`${herdRow},${herd.to[1]}`] = true
+        herd.from[1] = possibleNextPosition
+        herd.to[1] = possibleNextPosition
+      } else {
+        locSeaFloor.empty[`${herdRow},${possibleNextPosition}`] = false
+        locSeaFloor.empty[`${herdRow},${herd.to[1]}`] = true
+        newHerds.push({
+          from: [herdRow, possibleNextPosition],
+          to: [herdRow, possibleNextPosition]
+        })
+        herd.to[1] = herd.to[1] === 0 ? W - 1 : herd.to[1] - 1;
+      }
+    }
+  })
+
+  locSeaFloor.herds.east.push(...newHerds);
+
+  return [JSON.parse(JSON.stringify(locSeaFloor)), madeMove]
+}
+
+const moveSouth = (seaFloor: SeaFloor): [SeaFloor, boolean] => {
+  const locSeaFloor = JSON.parse(JSON.stringify(seaFloor)) as SeaFloor;
+  let madeMove = false;
+
+  const newHerds: Herd[] = [];
+  locSeaFloor.herds.south.forEach((herd: Herd) => {
+    let possibleNextPosition = herd.to[0] === H - 1 ? 0 : herd.to[0] + 1
+    let herdCol = herd.to[1];
+
+    if(locSeaFloor.empty[`${possibleNextPosition},${herdCol}`]) {
+      madeMove = true
+      if(herd.to[0] === herd.from[0]) {
+        locSeaFloor.empty[`${herd.from[0]},${herdCol}`] = true
+        locSeaFloor.empty[`${possibleNextPosition},${herdCol}`] = false
+        herd.from[0] = possibleNextPosition;
+        herd.to[0] = possibleNextPosition
+      } else {
+        locSeaFloor.empty[`${herd.from[0]},${herdCol}`] = true
+        locSeaFloor.empty[`${possibleNextPosition},${herdCol}`] = false
+
+        newHerds.push({
+          from: [possibleNextPosition, herdCol],
+          to: [possibleNextPosition, herdCol],
+        })
+
+        herd.to[0] = herd.to[0] === 0 ? H - 1 : herd.to[0] - 1
+      }
+    }
+  })
+
+  locSeaFloor.herds.south.push(...newHerds);
+  return [JSON.parse(JSON.stringify(locSeaFloor)), madeMove]
+}
+
+const drawBoard = (seaFloor: SeaFloor): void => {
+  let board: string[][] = [...new Array(H)]
+  board.forEach((v: string[], i: number) => {
+    let string: string[]= [...new Array(W).fill(".")]
+    board[i] = string;
+  })
+
+  seaFloor.herds.east.forEach((herd: Herd) => {
+    let start = herd.from[1];
+    let end = herd.to[1];
+    let herdRow = herd.to[0];
+    while(start !== end) {
+      board[herdRow][start] = ">";
+      start = (start + 1) % (W)
+    }
+    board[herdRow][start] = ">";
+  })
+
+  seaFloor.herds.south.forEach((herd: Herd) => {
+    let start = herd.from[0];
+    let end = herd.to[0];
+    let herdCol = herd.to[1];
+    while(start !== end) {
+      board[start][herdCol] = "v";
+      start = (start + 1) % (H)
+    }
+    board[start][herdCol] = "v";
+  })
+
+
+  let joinedBoard = board.map(( row: string[] ) => {
+    return row.join("");
+  })
+  fs.writeFileSync("./test.txt", joinedBoard.join("\n"));
+}
 
 const sol1 = (input: string[]) => {
-  const seaFloor = parseInput(input);
+  let seaFloor = parseInput(input);
+
+  let steps = 0;
+  let madeMove: boolean = true
+  fs.writeFileSync("./test.json", JSON.stringify(seaFloor.herds.east));
+  drawBoard(seaFloor)
+  while(madeMove) {
+    // dvizhi gi istok
+    steps++;
+    [seaFloor, madeMove] = moveEast(seaFloor);
+    fs.writeFileSync("./test.json", JSON.stringify(seaFloor.herds.east));
+    // dvizhi gi jug
+    [seaFloor, madeMove] = moveSouth(seaFloor);
+    drawBoard(seaFloor)
+    fs.writeFileSync("./test.json", JSON.stringify(seaFloor.herds.south));
+  }
+
+  return steps;
 }
 
 
