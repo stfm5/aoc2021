@@ -84,10 +84,26 @@ const parseInput = (input: string[]): SeaFloor => {
     })
   })
   // TODO: Vekje gi imash site stada, sega samo treba tie sho se prelevaat od eden na drug kraj da gi spoish
+  let to: number[] = [];
+  let from: number[] = [];
   seaFloor.herds.south.forEach((herd: Herd, i: number) => {
+    if(herd.from[0] === 0) {
+      from.push(i);
+    } else if(herd.to[0] === H - 1) {
+      to.push(i);
+    }
+  })
+  // Za sekoe stado koe zavrshuva na posledniot red ili pochuva na prviot, gledame dali se od istata kolona
+  // Ako se, gi na toa sho pochnuva od prviot mu stavame from na toa sho zavrshuva od posledniot, i go brisheme drugiot
+  // Ova e za tie sho odat na jug
+  // Za tie sho odat na istok kje bide istoto, samo vo drugata nasoka
+  to.forEach((toI: number, i: number) => {
+    from.forEach((fromI: number, j: number) => {
+      // seaFloor.herds[fromI][1] === seaFloor.herds[toI][1];
+    })
   })
     
-  console.log(seaFloor);
+  console.log(seaFloor)
   fs.writeFileSync("./test.json", JSON.stringify(seaFloor));
   return seaFloor
 }
